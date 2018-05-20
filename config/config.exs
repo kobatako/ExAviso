@@ -27,4 +27,7 @@ use Mix.Config
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-#     import_config "#{Mix.env}.exs"
+import_config "config.secret.exs"
+
+  config :slack,
+    token: "xoxb-167522873975-366238860000-XI9MAPlVy9dZWTE3r04yExWS"

@@ -2,17 +2,20 @@ defmodule ExAviso do
   @moduledoc """
   Documentation for ExAviso.
   """
+  use Supervisor
 
-  @doc """
-  Hello world.
+  def start(_type, _args) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
 
-  ## Examples
-
-      iex> ExAviso.hello
-      :world
-
-  """
-  def hello do
-    :world
+  def init([]) do
+    children = [
+      %{
+          id: ExAviso.Supervisor,
+          start: {ExAviso.Supervisor, :start_link, [%{}]}
+       }
+    ]
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end
+
