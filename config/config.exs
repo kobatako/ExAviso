@@ -28,6 +28,3 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 import_config "config.secret.exs"
-
-  config :slack,
-    token: "xoxb-167522873975-366238860000-XI9MAPlVy9dZWTE3r04yExWS"
