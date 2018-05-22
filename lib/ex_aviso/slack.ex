@@ -16,15 +16,16 @@ defmodule ExAviso.Slack do
   def init() do
     {:ok, %{}}
   end
+
   @doc """
   connect slack.
 
   """
   def connect(token) do
 		fetch_body(token)
-		|> parse_url
-		|> connect_websocket
-    |> loop
+		|> parse_url()
+		|> connect_websocket()
+    |> loop()
   end
 
   defp fetch_body(token) do
@@ -55,8 +56,8 @@ defmodule ExAviso.Slack do
 				|> message(socket)
 				loop(socket)
 			{:ping, _} ->
-        t = DateTime.utc_now |> DateTime.to_string
-				socket |> Socket.Web.send! {:text, Poison.encode!(%{type: "ping", id: t})}		
+        t = DateTime.utc_now() |> DateTime.to_string()
+				socket |> Socket.Web.send!({:text, Poison.encode!(%{type: "ping", id: t})})
 				loop(socket)
 			other ->
 				IO.inspect "other request"
@@ -71,8 +72,6 @@ defmodule ExAviso.Slack do
     }
     Enum.map(GenServer.call(__MODULE__, :fetch), fn f -> f.(:desktop_notification, r) end)
     |> response_handle(socket)
-
-		IO.inspect m
 	end
 
 	defp message(%{type: "message"} = m, socket) do
@@ -82,8 +81,6 @@ defmodule ExAviso.Slack do
     }
     Enum.map(GenServer.call(__MODULE__, :fetch), fn f -> f.(:message, r) end)
     |> response_handle(socket)
-
-		IO.inspect m
 	end
 
 	defp message(%{type: type} = message, _) do
@@ -127,5 +124,14 @@ defmodule ExAviso.Slack do
   end
   def response(_other, _) do
   end
+
+	def get_option(line, default) do
+		String.split(line, " ")
+		|> Enum.map(&Regex.named_captures(~r/(?<name>.*)=(?<value>.*)/, &1)) # オプションとして記載されているものの取得
+		|> Enum.filter(&(&1 != nil)) # nilを削除
+		|> Enum.map(&(%{&1["name"] => &1["value"]})) # name = valueでオプションを指定しているので%{name => value}でmapを作成
+		|> Enum.reduce(%{}, &(Map.merge(&1, &2))) # 配列内にあるmapを連結
+		|> Map.merge(default, fn _k, v1, _v2 -> v1 end) # 優先度を第一引数のmapにする
+	end
 end
 
