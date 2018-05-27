@@ -20,11 +20,13 @@ defmodule ExAviso.Supervisor do
     {:ok, []}
   end
 
+  @impl true
   def handle_cast({:push, func}, t) when is_function(func) do
     GenServer.cast(ExAviso.Slack, {:push, func})
 		{:noreply, [func | t]}
   end
 
+  @impl true
   def handle_cast({:push, _}, t) do
 		{:noreply, t}
   end
