@@ -1,10 +1,12 @@
 defmodule ExAviso.Qiita do
+
 	@default_get_my_items_option %{"page" => 1, "per_page" => 20}
-	@default_get_my_items_option %{"user" => "", "page" => 1, "per_page" => 20}
+	@default_get_items_option %{"user" => "", "page" => 1, "per_page" => 20}
 
   def callback_handle_get_my_items(:message, _) do
 		:ok
 	end
+
   def callback_handle_get_my_items(:desktop_notification, m) do
     text = String.split(m.content, "\n")
     |> get_my_items()
@@ -19,11 +21,11 @@ defmodule ExAviso.Qiita do
   def callback_handle_get_items(:message, _) do
 		:ok
 	end
+
   def callback_handle_get_items(:desktop_notification, m) do
     text = String.split(m.content, "\n")
     |> get_items()
-    IO.inspect "callback handle get items"
-    IO.inspect text
+
     {:send, %ExAviso.SlackRequest{
       type: "message",
       channel: m.channel,
@@ -37,9 +39,8 @@ defmodule ExAviso.Qiita do
   end
 
   def get_items([head| []]) do
-    IO.inspect head
     if Regex.match?(~r/getItems/, head) do
-			option = ExAviso.Slack.get_option(head, @default_items_option)
+			option = ExAviso.Slack.get_option(head, @default_get_items_option)
 
       [token: token] = Application.get_all_env(:qiita) 
       headers = [{"Authorization", "Bearer #{token}"}]
@@ -47,12 +48,14 @@ defmodule ExAviso.Qiita do
       body = case HTTPoison.get!(url, headers) do
         %{status_code: 200, body: body} ->
           Poison.Parser.parse!(body, keys: :atoms)
+        %{status_code: 404} = error ->
+          IO.inspect error
         %{error: "account_inactive"} = error ->
           IO.inspect error
       end
      
       e = for %{title: title, url: url} <- body, do: "#{title}[#{url}]"
-      [Enum.join(e, "\n")]
+      ["-----------------------------------------------------", Enum.join(e, "\n")]
     else
       [""]
     end
@@ -79,7 +82,7 @@ defmodule ExAviso.Qiita do
     else
       ""
     end
-    [resp| get_my_items(tail)]
+    [resp| get_items(tail)]
   end
 
   def get_my_items([]) do
@@ -101,7 +104,7 @@ defmodule ExAviso.Qiita do
       end
      
       e = for %{title: title, url: url} <- body, do: "#{title}[#{url}]"
-      [Enum.join(e, "\n")]
+      ["-----------------------------------------------------", Enum.join(e, "\n")]
     else
       [""]
     end

@@ -29,7 +29,7 @@ defmodule ExAviso.Slack do
   end
 
   defp fetch_body(token) do
-    url = "https://slack.com/api/rtm.start?token=" <> token <> "&include_locale=true"
+    url = "https://slack.com/api/rtm.start?token=#{token}&include_locale=true"
     case HTTPoison.get! url do
 			%{status_code: 200, body: body} ->
 				Poison.Parser.parse!(body, keys: :atoms)
@@ -46,11 +46,11 @@ defmodule ExAviso.Slack do
 	end
 
 	defp connect_websocket(%{domain: domain, path: path}) do
-		Socket.Web.connect! domain, secure: true, path: "/" <> path
+		Socket.Web.connect!(domain, secure: true, path: "/" <> path)
 	end
 
 	defp loop(socket) do
-		case socket |> Socket.Web.recv! do
+		case socket |> Socket.Web.recv!() do
 			{:text, text} ->
         Poison.Parser.parse!(text, keys: :atoms)
 				|> message(socket)
@@ -84,11 +84,9 @@ defmodule ExAviso.Slack do
 	end
 
 	defp message(%{type: type} = message, _) do
-		IO.inspect message
 	end
 
 	defp message(%{ok: true} = message, _) do
-		IO.inspect message
 	end
 
   @doc """
@@ -108,20 +106,23 @@ defmodule ExAviso.Slack do
 
   def response_handle([], _) do
   end
+
   def response_handle([head| []], socket) do
     response(head, socket)
   end
+
   def response_handle([head| tail], socket) do
     response(head, socket)
     response_handle(tail, socket) 
   end
 
   def response({:send, message}, socket) do
-    socket |> Socket.Web.send! {:text, Poison.encode!(message)}
+    socket |> Socket.Web.send!({:text, Poison.encode!(message)})
   end
+
   def response(:ok, _) do
-    IO.inspect "response handle is ok" 
   end
+
   def response(_other, _) do
   end
 
