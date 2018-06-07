@@ -27,4 +27,13 @@ use Mix.Config
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
+
+config :ex_aviso_scheduler, ExAviso.Scheduler,
+  jobs: [
+		 notification_tag_items: [
+       schedule: {:cron, "* * * * *"}, # Runs every two seconds
+      task: {ExAviso.Scheduler.Task, :tag_items, []}
+    ]
+  ]
+
 import_config "config.secret.exs"
